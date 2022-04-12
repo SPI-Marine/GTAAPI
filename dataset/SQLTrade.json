@@ -1,0 +1,60 @@
+{
+	"name": "SQLTrade",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlLinkedService",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Year",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Month",
+				"type": "tinyint",
+				"precision": 3
+			},
+			{
+				"name": "Direction",
+				"type": "varchar"
+			},
+			{
+				"name": "Reporter",
+				"type": "varchar"
+			},
+			{
+				"name": "Partner",
+				"type": "varchar"
+			},
+			{
+				"name": "Product",
+				"type": "varchar"
+			},
+			{
+				"name": "Currency",
+				"type": "varchar"
+			},
+			{
+				"name": "Value",
+				"type": "varchar"
+			},
+			{
+				"name": "Unit",
+				"type": "varchar"
+			},
+			{
+				"name": "Quantity",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "GTA",
+			"table": "Trade"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

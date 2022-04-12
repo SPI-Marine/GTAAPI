@@ -1,0 +1,9 @@
+{
+	"name": "GTAAPI",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "337f6c29-5b7e-40c0-975d-570c8018722d",
+		"tenantId": "cac8c10c-4aa9-43d0-bd13-2a291864ccf0"
+	}
+}

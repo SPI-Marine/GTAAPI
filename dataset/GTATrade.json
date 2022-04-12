@@ -1,0 +1,74 @@
+{
+	"name": "GTATrade",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "GTA",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"ProductQueryString": {
+				"type": "string",
+				"defaultValue": "&product=220700"
+			},
+			"Direction": {
+				"type": "string",
+				"defaultValue": "direction=ImportAndExport"
+			},
+			"StartPeriod": {
+				"type": "string",
+				"defaultValue": "&startPeriod=Jan%202021"
+			},
+			"EndPeriod": {
+				"type": "string",
+				"defaultValue": "&endPeriod=Feb%202021"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation",
+				"relativeUrl": {
+					"value": "@concat('/maritimeandtrade/gta/v1/Monthly/trade?', dataset().Direction, '&concept=Value&concept=Quantity&frequency=Monthly', dataset().StartPeriod, dataset().EndPeriod, '&contentType=JSON&flatFormat=true', dataset().ProductQueryString)",
+					"type": "Expression"
+				}
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"Year": {
+					"type": "integer"
+				},
+				"Month": {
+					"type": "integer"
+				},
+				"Direction": {
+					"type": "string"
+				},
+				"Reporter": {
+					"type": "string"
+				},
+				"Partner": {
+					"type": "string"
+				},
+				"Product": {
+					"type": "string"
+				},
+				"Currency": {
+					"type": "string"
+				},
+				"Value": {
+					"type": "number"
+				},
+				"Unit": {
+					"type": "string"
+				},
+				"Quantity": {
+					"type": "number"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

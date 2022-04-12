@@ -1,0 +1,294 @@
+{
+	"name": "ProductsPipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "Fetch HS2 Data",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Truncate Products Table",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "GET",
+							"requestTimeout": ""
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "['Id']"
+								},
+								"sink": {
+									"name": "ProductId",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['Name']"
+								},
+								"sink": {
+									"name": "ProductName",
+									"type": "String"
+								}
+							}
+						],
+						"collectionReference": "$['Results']"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "GTAProductsHS2",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "SQLProducts",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Fetch HS4 Data",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Fetch HS2 Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "GET",
+							"requestTimeout": ""
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "['Id']"
+								},
+								"sink": {
+									"name": "ProductId",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['Name']"
+								},
+								"sink": {
+									"name": "ProductName",
+									"type": "String"
+								}
+							}
+						],
+						"collectionReference": "$['Results']"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "GTAProductsHS4",
+						"type": "DatasetReference",
+						"parameters": {
+							"ProductDetailLevel": "HS4"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "SQLProducts",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Truncate Products Table",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[ETL].[TruncateStagingTable]",
+					"storedProcedureParameters": {
+						"TableName": {
+							"value": "GTA.Products",
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureSqlLinkedService",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Fetch HS6 Data",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Fetch HS4 Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "GET",
+							"requestTimeout": ""
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "['Id']"
+								},
+								"sink": {
+									"name": "ProductId",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['Name']"
+								},
+								"sink": {
+									"name": "ProductName",
+									"type": "String"
+								}
+							}
+						],
+						"collectionReference": "$['Results']"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "GTAProductsHS6",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "SQLProducts",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Update HS Codes",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Fetch HS6 Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[ETL].[UpdateGTA_HSCodes]"
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureSqlLinkedService",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-02-02T16:09:33Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

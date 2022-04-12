@@ -1,0 +1,40 @@
+{
+	"name": "GTAProductsHS2",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "GTA",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation",
+				"relativeUrl": "/maritimeandtrade/gta/v1/products?detailLevel=HS2&results=10000&contentType=JSON"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"Results": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"Id": {
+								"type": "string"
+							},
+							"Name": {
+								"type": "string"
+							}
+						}
+					}
+				},
+				"TotalResults": {
+					"type": "integer"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

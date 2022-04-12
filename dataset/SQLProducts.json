@@ -1,0 +1,30 @@
+{
+	"name": "SQLProducts",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlLinkedService",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ProductId",
+				"type": "varchar"
+			},
+			{
+				"name": "ProductName",
+				"type": "varchar"
+			},
+			{
+				"name": "ProductDetailLevel",
+				"type": "char"
+			}
+		],
+		"typeProperties": {
+			"schema": "GTA",
+			"table": "Products"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
