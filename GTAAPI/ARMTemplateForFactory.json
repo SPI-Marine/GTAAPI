@@ -1,0 +1,1018 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "GTAAPI"
+		},
+		"AzureSqlLinkedService_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureSqlLinkedService'"
+		},
+		"GTA_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'GTA'"
+		},
+		"SPIBlobStorage_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SPIBlobStorage'"
+		},
+		"GTA_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://api.connect.ihsmarkit.com"
+		},
+		"GTA_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "spi_api@spimarine.com"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ProductsPipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Fetch HS2 Data",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Truncate Products Table",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "GET",
+									"requestTimeout": ""
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "[['Id']"
+										},
+										"sink": {
+											"name": "ProductId",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['Name']"
+										},
+										"sink": {
+											"name": "ProductName",
+											"type": "String"
+										}
+									}
+								],
+								"collectionReference": "$['Results']"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "GTAProductsHS2",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "SQLProducts",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Fetch HS4 Data",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Fetch HS2 Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "GET",
+									"requestTimeout": ""
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "[['Id']"
+										},
+										"sink": {
+											"name": "ProductId",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['Name']"
+										},
+										"sink": {
+											"name": "ProductName",
+											"type": "String"
+										}
+									}
+								],
+								"collectionReference": "$['Results']"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "GTAProductsHS4",
+								"type": "DatasetReference",
+								"parameters": {
+									"ProductDetailLevel": "HS4"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "SQLProducts",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Truncate Products Table",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[ETL].[TruncateStagingTable]",
+							"storedProcedureParameters": {
+								"TableName": {
+									"value": "GTA.Products",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlLinkedService",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Fetch HS6 Data",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Fetch HS4 Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "GET",
+									"requestTimeout": ""
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "[['Id']"
+										},
+										"sink": {
+											"name": "ProductId",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['Name']"
+										},
+										"sink": {
+											"name": "ProductName",
+											"type": "String"
+										}
+									}
+								],
+								"collectionReference": "$['Results']"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "GTAProductsHS6",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "SQLProducts",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Update HS Codes",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Fetch HS6 Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[ETL].[UpdateGTA_HSCodes]"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlLinkedService",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-02-02T16:09:33Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/GTAProductsHS2')]",
+				"[concat(variables('factoryId'), '/datasets/SQLProducts')]",
+				"[concat(variables('factoryId'), '/datasets/GTAProductsHS4')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlLinkedService')]",
+				"[concat(variables('factoryId'), '/datasets/GTAProductsHS6')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TradePipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Fetch Trade data",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Get Product List",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "GET"
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"preCopyScript": "truncate table GTA.Trade;",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "$['Year']"
+										},
+										"sink": {
+											"name": "Year",
+											"type": "Int32"
+										}
+									},
+									{
+										"source": {
+											"path": "$['Month']"
+										},
+										"sink": {
+											"name": "Month",
+											"type": "Byte"
+										}
+									},
+									{
+										"source": {
+											"path": "$['Direction']"
+										},
+										"sink": {
+											"name": "Direction",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['Reporter']"
+										},
+										"sink": {
+											"name": "Reporter",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['Partner']"
+										},
+										"sink": {
+											"name": "Partner",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['Product']"
+										},
+										"sink": {
+											"name": "Product",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['Currency']"
+										},
+										"sink": {
+											"name": "Currency",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['Value']"
+										},
+										"sink": {
+											"name": "Value",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['Unit']"
+										},
+										"sink": {
+											"name": "Unit",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "$['Quantity']"
+										},
+										"sink": {
+											"name": "Quantity",
+											"type": "String"
+										}
+									}
+								],
+								"collectionReference": "",
+								"mapComplexValuesToString": false
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "GTATrade",
+								"type": "DatasetReference",
+								"parameters": {
+									"ProductQueryString": {
+										"value": "@activity('Get Product List').output.firstRow.ProductList",
+										"type": "Expression"
+									},
+									"Direction": {
+										"value": "@activity('Get Product List').output.firstRow.Direction",
+										"type": "Expression"
+									},
+									"StartPeriod": {
+										"value": "@activity('Get Product List').output.firstRow.StartPeriod",
+										"type": "Expression"
+									},
+									"EndPeriod": {
+										"value": "@activity('Get Product List').output.firstRow.EndPeriod",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "SQLTrade",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Get Product List",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderStoredProcedureName": "[[ETL].[GetConfigData]",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "GenericSQLDataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-02-15T18:20:11Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/GTATrade')]",
+				"[concat(variables('factoryId'), '/datasets/SQLTrade')]",
+				"[concat(variables('factoryId'), '/datasets/GenericSQLDataset')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GTAProductsHS2')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "GTA",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": "/maritimeandtrade/gta/v1/products?detailLevel=HS2&results=10000&contentType=JSON"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"Results": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"Id": {
+										"type": "string"
+									},
+									"Name": {
+										"type": "string"
+									}
+								}
+							}
+						},
+						"TotalResults": {
+							"type": "integer"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/GTA')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GTAProductsHS4')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "GTA",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ProductDetailLevel": {
+						"type": "string",
+						"defaultValue": "HS4"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": "/maritimeandtrade/gta/v1/products?detailLevel=HS4&results=10000&contentType=JSON"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"Results": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"Id": {
+										"type": "string"
+									},
+									"Name": {
+										"type": "string"
+									}
+								}
+							}
+						},
+						"TotalResults": {
+							"type": "integer"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/GTA')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GTAProductsHS6')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "GTA",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": "/maritimeandtrade/gta/v1/products?detailLevel=HS6&results=10000&contentType=JSON"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"Results": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"Id": {
+										"type": "string"
+									},
+									"Name": {
+										"type": "string"
+									}
+								}
+							}
+						},
+						"TotalResults": {
+							"type": "integer"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/GTA')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GTATrade')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "GTA",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ProductQueryString": {
+						"type": "string",
+						"defaultValue": "&product=220700"
+					},
+					"Direction": {
+						"type": "string",
+						"defaultValue": "direction=ImportAndExport"
+					},
+					"StartPeriod": {
+						"type": "string",
+						"defaultValue": "&startPeriod=Jan%202021"
+					},
+					"EndPeriod": {
+						"type": "string",
+						"defaultValue": "&endPeriod=Feb%202021"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": {
+							"value": "@concat('/maritimeandtrade/gta/v1/Monthly/trade?', dataset().Direction, '&concept=Value&concept=Quantity&frequency=Monthly', dataset().StartPeriod, dataset().EndPeriod, '&contentType=JSON&flatFormat=true', dataset().ProductQueryString)",
+							"type": "Expression"
+						}
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"Year": {
+							"type": "integer"
+						},
+						"Month": {
+							"type": "integer"
+						},
+						"Direction": {
+							"type": "string"
+						},
+						"Reporter": {
+							"type": "string"
+						},
+						"Partner": {
+							"type": "string"
+						},
+						"Product": {
+							"type": "string"
+						},
+						"Currency": {
+							"type": "string"
+						},
+						"Value": {
+							"type": "number"
+						},
+						"Unit": {
+							"type": "string"
+						},
+						"Quantity": {
+							"type": "number"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/GTA')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GenericSQLDataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlLinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlLinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQLProducts')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlLinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ProductId",
+						"type": "varchar"
+					},
+					{
+						"name": "ProductName",
+						"type": "varchar"
+					},
+					{
+						"name": "ProductDetailLevel",
+						"type": "char"
+					}
+				],
+				"typeProperties": {
+					"schema": "GTA",
+					"table": "Products"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlLinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQLTrade')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlLinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Year",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Month",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "Direction",
+						"type": "varchar"
+					},
+					{
+						"name": "Reporter",
+						"type": "varchar"
+					},
+					{
+						"name": "Partner",
+						"type": "varchar"
+					},
+					{
+						"name": "Product",
+						"type": "varchar"
+					},
+					{
+						"name": "Currency",
+						"type": "varchar"
+					},
+					{
+						"name": "Value",
+						"type": "varchar"
+					},
+					{
+						"name": "Unit",
+						"type": "varchar"
+					},
+					{
+						"name": "Quantity",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "GTA",
+					"table": "Trade"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlLinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlLinkedService')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureSqlLinkedService_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GTA')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "HttpServer",
+				"typeProperties": {
+					"url": "[parameters('GTA_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Basic",
+					"userName": "[parameters('GTA_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('GTA_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SPIBlobStorage')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('SPIBlobStorage_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Weekly_Trigger')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "ProductsPipeline",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 1,
+						"startTime": "2022-04-15T18:12:00Z",
+						"timeZone": "UTC",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								5
+							],
+							"weekDays": [
+								"Monday"
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/ProductsPipeline')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Daily_Trigger')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "TradePipeline",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2022-05-04T18:26:00Z",
+						"timeZone": "UTC",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								7
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/TradePipeline')]"
+			]
+		}
+	]
+}
