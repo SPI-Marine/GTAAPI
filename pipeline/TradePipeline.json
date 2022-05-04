@@ -185,6 +185,27 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderStoredProcedureName": "[ETL].[GetConfigData]",
+						"storedProcedureParameters": {
+							"EndMonth": {
+								"type": "String",
+								"value": "LAST"
+							},
+							"EndYear": {
+								"type": "Int32",
+								"value": null
+							},
+							"StartMonth": {
+								"type": "String",
+								"value": "Jan"
+							},
+							"StartYear": {
+								"type": "Int32",
+								"value": {
+									"value": "@int(formatDateTime(utcNow(), 'yyyy'))",
+									"type": "Expression"
+								}
+							}
+						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
