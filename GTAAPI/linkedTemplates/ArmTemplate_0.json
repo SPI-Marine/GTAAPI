@@ -936,7 +936,7 @@
 									"StartYear": {
 										"type": "Int32",
 										"value": {
-											"value": "@pipeline().parameters.StartYear",
+											"value": "@if(equals(pipeline().parameters.StartYear, 0), int(formatDateTime(utcNow(), 'yyyy')), pipeline().parameters.StartYear)",
 											"type": "Expression"
 										}
 									}
@@ -963,15 +963,14 @@
 					},
 					"EndMonth": {
 						"type": "string",
-						"defaultValue": "Dec"
+						"defaultValue": "LAST"
 					},
 					"StartYear": {
 						"type": "int",
-						"defaultValue": 2017
+						"defaultValue": 0
 					},
 					"EndYear": {
-						"type": "string",
-						"defaultValue": "2017"
+						"type": "string"
 					}
 				},
 				"annotations": [],
