@@ -210,7 +210,7 @@
 							"StartYear": {
 								"type": "Int32",
 								"value": {
-									"value": "@pipeline().parameters.StartYear",
+									"value": "@coalesce(pipeline().parameters.StartYear, int(formatDateTime(utcNow(), 'yyyy')))",
 									"type": "Expression"
 								}
 							}
@@ -235,8 +235,7 @@
 				"defaultValue": "LAST"
 			},
 			"StartYear": {
-				"type": "int",
-				"defaultValue": 2019
+				"type": "int"
 			},
 			"EndYear": {
 				"type": "string"
