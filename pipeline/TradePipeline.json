@@ -232,15 +232,14 @@
 			},
 			"EndMonth": {
 				"type": "string",
-				"defaultValue": "Dec"
+				"defaultValue": "LAST"
 			},
 			"StartYear": {
 				"type": "int",
 				"defaultValue": 2019
 			},
 			"EndYear": {
-				"type": "string",
-				"defaultValue": "2019"
+				"type": "string"
 			}
 		},
 		"annotations": [],
