@@ -236,11 +236,11 @@
 			},
 			"StartYear": {
 				"type": "int",
-				"defaultValue": 2017
+				"defaultValue": 2018
 			},
 			"EndYear": {
 				"type": "string",
-				"defaultValue": "2017"
+				"defaultValue": "2018"
 			}
 		},
 		"annotations": [],
