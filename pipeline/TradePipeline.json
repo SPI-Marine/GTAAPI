@@ -188,20 +188,29 @@
 						"storedProcedureParameters": {
 							"EndMonth": {
 								"type": "String",
-								"value": "LAST"
+								"value": {
+									"value": "@pipeline().parameters.EndMonth",
+									"type": "Expression"
+								}
 							},
 							"EndYear": {
 								"type": "Int32",
-								"value": null
+								"value": {
+									"value": "@pipeline().parameters.EndYear",
+									"type": "Expression"
+								}
 							},
 							"StartMonth": {
 								"type": "String",
-								"value": "Jan"
+								"value": {
+									"value": "@pipeline().parameters.StartMonth",
+									"type": "Expression"
+								}
 							},
 							"StartYear": {
 								"type": "Int32",
 								"value": {
-									"value": "@int(formatDateTime(utcNow(), 'yyyy'))",
+									"value": "@pipeline().parameters.StartYear",
 									"type": "Expression"
 								}
 							}
@@ -216,6 +225,24 @@
 				}
 			}
 		],
+		"parameters": {
+			"StartMonth": {
+				"type": "string",
+				"defaultValue": "Jan"
+			},
+			"EndMonth": {
+				"type": "string",
+				"defaultValue": "Dec"
+			},
+			"StartYear": {
+				"type": "int",
+				"defaultValue": 2017
+			},
+			"EndYear": {
+				"type": "string",
+				"defaultValue": "2017"
+			}
+		},
 		"annotations": [],
 		"lastPublishTime": "2022-02-15T18:20:11Z"
 	},
