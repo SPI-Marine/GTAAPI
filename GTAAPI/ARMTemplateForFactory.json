@@ -533,6 +533,36 @@
 							"source": {
 								"type": "AzureSqlSource",
 								"sqlReaderStoredProcedureName": "[[ETL].[GetConfigData]",
+								"storedProcedureParameters": {
+									"EndMonth": {
+										"type": "String",
+										"value": {
+											"value": "@pipeline().parameters.EndMonth",
+											"type": "Expression"
+										}
+									},
+									"EndYear": {
+										"type": "Int32",
+										"value": {
+											"value": "@pipeline().parameters.EndYear",
+											"type": "Expression"
+										}
+									},
+									"StartMonth": {
+										"type": "String",
+										"value": {
+											"value": "@pipeline().parameters.StartMonth",
+											"type": "Expression"
+										}
+									},
+									"StartYear": {
+										"type": "Int32",
+										"value": {
+											"value": "@pipeline().parameters.StartYear",
+											"type": "Expression"
+										}
+									}
+								},
 								"queryTimeout": "02:00:00",
 								"partitionOption": "None"
 							},
@@ -547,6 +577,24 @@
 				"policy": {
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
+				},
+				"parameters": {
+					"StartMonth": {
+						"type": "string",
+						"defaultValue": "Jan"
+					},
+					"EndMonth": {
+						"type": "string",
+						"defaultValue": "Dec"
+					},
+					"StartYear": {
+						"type": "int",
+						"defaultValue": 2017
+					},
+					"EndYear": {
+						"type": "string",
+						"defaultValue": "2017"
+					}
 				},
 				"annotations": [],
 				"lastPublishTime": "2022-02-15T18:20:11Z"
@@ -936,6 +984,44 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Daily_Trigger')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "TradePipeline",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2022-05-04T18:26:00Z",
+						"timeZone": "UTC",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								7
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/TradePipeline')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Weekly_Trigger')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
@@ -974,44 +1060,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/ProductsPipeline')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Daily_Trigger')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Stopped",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "TradePipeline",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Day",
-						"interval": 1,
-						"startTime": "2022-05-04T18:26:00Z",
-						"timeZone": "UTC",
-						"schedule": {
-							"minutes": [
-								0
-							],
-							"hours": [
-								7
-							]
-						}
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/TradePipeline')]"
 			]
 		}
 	]
