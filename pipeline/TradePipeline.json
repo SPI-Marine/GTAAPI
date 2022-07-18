@@ -8,7 +8,7 @@
 				"type": "Until",
 				"dependsOn": [
 					{
-						"activity": "Truncate GTA Trade table",
+						"activity": "Load HSCodes table",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -347,6 +347,33 @@
 							"text": "truncate table GTA.Trade;"
 						}
 					]
+				}
+			},
+			{
+				"name": "Load HSCodes table",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Truncate GTA Trade table",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[ETL].[LoadHSCodeList]"
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureSqlLinkedService",
+					"type": "LinkedServiceReference"
 				}
 			}
 		],
