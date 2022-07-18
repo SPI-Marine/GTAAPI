@@ -3,225 +3,291 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Fetch Trade data",
-				"type": "Copy",
-				"dependsOn": [
-					{
-						"activity": "Get Product List",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "7.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "JsonSource",
-						"storeSettings": {
-							"type": "HttpReadSettings",
-							"requestMethod": "GET"
-						},
-						"formatSettings": {
-							"type": "JsonReadSettings"
-						}
-					},
-					"sink": {
-						"type": "AzureSqlSink",
-						"preCopyScript": "truncate table GTA.Trade;",
-						"writeBehavior": "insert",
-						"sqlWriterUseTableLock": false,
-						"disableMetricsCollection": false
-					},
-					"enableStaging": false,
-					"translator": {
-						"type": "TabularTranslator",
-						"mappings": [
-							{
-								"source": {
-									"path": "$['Year']"
-								},
-								"sink": {
-									"name": "Year",
-									"type": "Int32"
-								}
-							},
-							{
-								"source": {
-									"path": "$['Month']"
-								},
-								"sink": {
-									"name": "Month",
-									"type": "Byte"
-								}
-							},
-							{
-								"source": {
-									"path": "$['Direction']"
-								},
-								"sink": {
-									"name": "Direction",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "$['Reporter']"
-								},
-								"sink": {
-									"name": "Reporter",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "$['Partner']"
-								},
-								"sink": {
-									"name": "Partner",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "$['Product']"
-								},
-								"sink": {
-									"name": "Product",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "$['Currency']"
-								},
-								"sink": {
-									"name": "Currency",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "$['Value']"
-								},
-								"sink": {
-									"name": "Value",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "$['Unit']"
-								},
-								"sink": {
-									"name": "Unit",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "$['Quantity']"
-								},
-								"sink": {
-									"name": "Quantity",
-									"type": "String"
-								}
-							}
-						],
-						"collectionReference": "",
-						"mapComplexValuesToString": false
-					}
-				},
-				"inputs": [
-					{
-						"referenceName": "GTATrade",
-						"type": "DatasetReference",
-						"parameters": {
-							"ProductQueryString": {
-								"value": "@activity('Get Product List').output.firstRow.ProductList",
-								"type": "Expression"
-							},
-							"Direction": {
-								"value": "@activity('Get Product List').output.firstRow.Direction",
-								"type": "Expression"
-							},
-							"StartPeriod": {
-								"value": "@activity('Get Product List').output.firstRow.StartPeriod",
-								"type": "Expression"
-							},
-							"EndPeriod": {
-								"value": "@activity('Get Product List').output.firstRow.EndPeriod",
-								"type": "Expression"
-							}
-						}
-					}
-				],
-				"outputs": [
-					{
-						"referenceName": "SQLTrade",
-						"type": "DatasetReference"
-					}
-				]
-			},
-			{
-				"name": "Get Product List",
-				"type": "Lookup",
+				"name": "Process Trade Data",
+				"description": "Loops through chunks of Product records and retrieves Trade data from IHS",
+				"type": "Until",
 				"dependsOn": [],
-				"policy": {
-					"timeout": "7.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
 				"userProperties": [],
 				"typeProperties": {
-					"source": {
-						"type": "AzureSqlSource",
-						"sqlReaderStoredProcedureName": "[ETL].[GetConfigData]",
-						"storedProcedureParameters": {
-							"EndMonth": {
-								"type": "String",
-								"value": {
-									"value": "@pipeline().parameters.EndMonth",
-									"type": "Expression"
+					"expression": {
+						"value": "@variables('HasUnprocessedRows')",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Fetch Trade data",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Set HasUnprocessedRows",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "JsonSource",
+									"storeSettings": {
+										"type": "HttpReadSettings",
+										"requestMethod": "GET"
+									},
+									"formatSettings": {
+										"type": "JsonReadSettings"
+									}
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"preCopyScript": "--truncate table GTA.Trade;",
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"path": "$['Year']"
+											},
+											"sink": {
+												"name": "Year",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Month']"
+											},
+											"sink": {
+												"name": "Month",
+												"type": "Byte"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Direction']"
+											},
+											"sink": {
+												"name": "Direction",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Reporter']"
+											},
+											"sink": {
+												"name": "Reporter",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Partner']"
+											},
+											"sink": {
+												"name": "Partner",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Product']"
+											},
+											"sink": {
+												"name": "Product",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Currency']"
+											},
+											"sink": {
+												"name": "Currency",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Value']"
+											},
+											"sink": {
+												"name": "Value",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Unit']"
+											},
+											"sink": {
+												"name": "Unit",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Quantity']"
+											},
+											"sink": {
+												"name": "Quantity",
+												"type": "String"
+											}
+										}
+									],
+									"collectionReference": "",
+									"mapComplexValuesToString": false
 								}
 							},
-							"EndYear": {
-								"type": "Int32",
-								"value": {
-									"value": "@pipeline().parameters.EndYear",
-									"type": "Expression"
+							"inputs": [
+								{
+									"referenceName": "GTATrade",
+									"type": "DatasetReference",
+									"parameters": {
+										"ProductQueryString": {
+											"value": "@activity('Get Product List').output.firstRow.ProductList",
+											"type": "Expression"
+										},
+										"Direction": {
+											"value": "@activity('Get Product List').output.firstRow.Direction",
+											"type": "Expression"
+										},
+										"StartPeriod": {
+											"value": "@activity('Get Product List').output.firstRow.StartPeriod",
+											"type": "Expression"
+										},
+										"EndPeriod": {
+											"value": "@activity('Get Product List').output.firstRow.EndPeriod",
+											"type": "Expression"
+										}
+									}
 								}
-							},
-							"StartMonth": {
-								"type": "String",
-								"value": {
-									"value": "@pipeline().parameters.StartMonth",
-									"type": "Expression"
+							],
+							"outputs": [
+								{
+									"referenceName": "SQLTrade",
+									"type": "DatasetReference"
 								}
+							]
+						},
+						{
+							"name": "Get Product List",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
 							},
-							"StartYear": {
-								"type": "Int32",
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderStoredProcedureName": "[ETL].[GetConfigData]",
+									"storedProcedureParameters": {
+										"EndMonth": {
+											"type": "String",
+											"value": {
+												"value": "@pipeline().parameters.EndMonth",
+												"type": "Expression"
+											}
+										},
+										"EndYear": {
+											"type": "Int32",
+											"value": {
+												"value": "@pipeline().parameters.EndYear",
+												"type": "Expression"
+											}
+										},
+										"StartMonth": {
+											"type": "String",
+											"value": {
+												"value": "@pipeline().parameters.StartMonth",
+												"type": "Expression"
+											}
+										},
+										"StartYear": {
+											"type": "Int32",
+											"value": {
+												"value": "@if(equals(pipeline().parameters.StartYear, 0), int(formatDateTime(utcNow(), 'yyyy')), pipeline().parameters.StartYear)",
+												"type": "Expression"
+											}
+										}
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "GenericSQLDataset",
+									"type": "DatasetReference"
+								}
+							}
+						},
+						{
+							"name": "Set HasUnprocessedRows",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Get Product List",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "HasUnprocessedRows",
 								"value": {
-									"value": "@if(equals(pipeline().parameters.StartYear, 0), int(formatDateTime(utcNow(), 'yyyy')), pipeline().parameters.StartYear)",
+									"value": "@if(equals(coalesce(activity('Get Product List').output.firstRow.ProductList,''),''), false, true)",
 									"type": "Expression"
 								}
 							}
 						},
-						"queryTimeout": "02:00:00",
-						"partitionOption": "None"
-					},
-					"dataset": {
-						"referenceName": "GenericSQLDataset",
-						"type": "DatasetReference"
-					}
+						{
+							"name": "If Condition1",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Fetch Trade data",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@variables('HasUnprocessedRows')",
+									"type": "Expression"
+								},
+								"ifTrueActivities": [
+									{
+										"name": "Wait for API reset",
+										"type": "Wait",
+										"dependsOn": [],
+										"userProperties": [],
+										"typeProperties": {
+											"waitTimeInSeconds": 3660
+										}
+									}
+								]
+							}
+						}
+					],
+					"timeout": "7.00:00:00"
 				}
 			}
 		],
@@ -240,6 +306,12 @@
 			},
 			"EndYear": {
 				"type": "string"
+			}
+		},
+		"variables": {
+			"HasUnprocessedRows": {
+				"type": "Boolean",
+				"defaultValue": true
 			}
 		},
 		"annotations": [],
