@@ -222,7 +222,7 @@
 										"StartMonth": {
 											"type": "String",
 											"value": {
-												"value": "@pipeline().parameters.StartMonth",
+												"value": "@if(equals(coalesce(pipeline().parameters.StartMonth, ''), ''), formatDateTime(addDays(utcNow(), -90), 'MMM'), pipeline().parameters.StartMonth) ",
 												"type": "Expression"
 											}
 										},
@@ -379,8 +379,7 @@
 		],
 		"parameters": {
 			"StartMonth": {
-				"type": "string",
-				"defaultValue": "Jan"
+				"type": "string"
 			},
 			"EndMonth": {
 				"type": "string",
