@@ -277,7 +277,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"expression": {
-									"value": "@variables('HasUnprocessedRows')",
+									"value": "@not(variables('HasUnprocessedRows'))",
 									"type": "Expression"
 								},
 								"ifTrueActivities": [
