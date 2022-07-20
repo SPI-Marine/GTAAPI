@@ -258,7 +258,7 @@
 							"typeProperties": {
 								"variableName": "HasUnprocessedRows",
 								"value": {
-									"value": "@if(equals(coalesce(activity('Get Product List').output.firstRow.ProductList,''),''), false, true)",
+									"value": "@if(equals(coalesce(activity('Get Product List').output.firstRow.ProductList,''),''), true, false)",
 									"type": "Expression"
 								}
 							}
@@ -396,7 +396,7 @@
 		"variables": {
 			"HasUnprocessedRows": {
 				"type": "Boolean",
-				"defaultValue": true
+				"defaultValue": false
 			}
 		},
 		"annotations": [],
