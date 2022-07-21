@@ -570,7 +570,7 @@
 												"StartMonth": {
 													"type": "String",
 													"value": {
-														"value": "@pipeline().parameters.StartMonth",
+														"value": "@if(equals(coalesce(pipeline().parameters.StartMonth, ''), ''), formatDateTime(addDays(utcNow(), -90), 'MMM'), pipeline().parameters.StartMonth) ",
 														"type": "Expression"
 													}
 												},
@@ -607,7 +607,7 @@
 									"typeProperties": {
 										"variableName": "HasUnprocessedRows",
 										"value": {
-											"value": "@if(equals(coalesce(activity('Get Product List').output.firstRow.ProductList,''),''), false, true)",
+											"value": "@if(equals(coalesce(activity('Get Product List').output.firstRow.ProductList,''),''), true, false)",
 											"type": "Expression"
 										}
 									}
@@ -617,7 +617,7 @@
 									"type": "IfCondition",
 									"dependsOn": [
 										{
-											"activity": "Fetch Trade data",
+											"activity": "Execute UpdateHSCodeList",
 											"dependencyConditions": [
 												"Succeeded"
 											]
@@ -626,7 +626,7 @@
 									"userProperties": [],
 									"typeProperties": {
 										"expression": {
-											"value": "@variables('HasUnprocessedRows')",
+											"value": "@not(variables('HasUnprocessedRows'))",
 											"type": "Expression"
 										},
 										"ifTrueActivities": [
@@ -636,7 +636,7 @@
 												"dependsOn": [],
 												"userProperties": [],
 												"typeProperties": {
-													"waitTimeInSeconds": 3660
+													"waitTimeInSeconds": 1800
 												}
 											}
 										]
@@ -647,7 +647,7 @@
 									"type": "SqlServerStoredProcedure",
 									"dependsOn": [
 										{
-											"activity": "If Condition1",
+											"activity": "Fetch Trade data",
 											"dependencyConditions": [
 												"Succeeded"
 											]
@@ -732,8 +732,7 @@
 				},
 				"parameters": {
 					"StartMonth": {
-						"type": "string",
-						"defaultValue": "Jan"
+						"type": "string"
 					},
 					"EndMonth": {
 						"type": "string",
@@ -750,7 +749,7 @@
 				"variables": {
 					"HasUnprocessedRows": {
 						"type": "Boolean",
-						"defaultValue": true
+						"defaultValue": false
 					}
 				},
 				"annotations": [],
