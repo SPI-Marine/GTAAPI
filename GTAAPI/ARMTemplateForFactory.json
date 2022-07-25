@@ -724,6 +724,33 @@
 							"referenceName": "AzureSqlLinkedService",
 							"type": "LinkedServiceReference"
 						}
+					},
+					{
+						"name": "LoadFact_Trade",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Process Trade Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[ETL].[LoadFact_Trade]"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlLinkedService",
+							"type": "LinkedServiceReference"
+						}
 					}
 				],
 				"policy": {
